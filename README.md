@@ -4,7 +4,7 @@ This repository tracks an end-to-end research project that studies how **alignme
 
 ![System Architecture](./assets/system_architecture.jpeg)
 
-## Project objective
+## Project Objective
 
 The core research question is:
 
@@ -18,7 +18,7 @@ The project is organized as a staged pipeline:
 4. Extend the VLM into an action-aware model.
 5. Fine-tune a VLA policy and compare transfer across alignment backbones.
 
-## System overview
+## System Overview
 
 ### A. Data construction and supervision
 The text-side supervision is built from a mix of public data and deterministic generators:
@@ -29,7 +29,7 @@ The text-side supervision is built from a mix of public data and deterministic g
 - **Instruction-following base data** for schema-constrained text generation.
 - **Preference data** built from public chosen/rejected sources plus rubric-scored project-specific pairs.
 
-### B. Shared schemas
+### B. Shared Schemas
 All model variants use the same canonical JSON schemas:
 
 - `scene_summary`
@@ -37,7 +37,7 @@ All model variants use the same canonical JSON schemas:
 - `reasoning_answer`
 - `action_plan`
 
-### C. Training stages
+### C. Training Stages
 
 #### Step 1 — Backbone selection + SFT baseline
 - Probe 2–3 candidate 7B models with a fixed constrained-format prompt set.
@@ -66,7 +66,7 @@ All model variants use the same canonical JSON schemas:
 - Evaluate offline trajectories and CALVIN task-level success.
 - Run cross-stage transfer ablations across alignment backbones.
 
-## Data construction details
+## Data Construction Details
 
 ### 1. Scene summary samples
 **Source:** GQA scene graphs  
@@ -97,9 +97,9 @@ Example target:
 - short action plan
 - goal state
 
-## Model outputs
+## Model Outputs
 
-### Text backbone
+### Text Backbone
 The aligned backbone is trained to emit:
 - concise scene summaries
 - structured object-state lists
@@ -123,7 +123,7 @@ The action-aware model and VLA policy should support:
 
 ## Evaluation
 
-### Text-stage metrics
+### Text-stage Metrics
 - **FVR**: Format Validity Rate
 - **FEM**: Field Exact Match
 - **Tuple F1**: groundedness over extracted tuples
@@ -131,19 +131,19 @@ The action-aware model and VLA policy should support:
 - **GRA**: Goal-Reach Accuracy
 - **AA**: Abstention Accuracy
 
-### VLM-stage metrics
+### VLM-stage Metrics
 - VQAv2 accuracy
 - GQA accuracy / consistency
 - RefCOCO(g) grounding accuracy at IoU >= 0.5
 - hallucination rate
 
-### VLA-stage metrics
+### VLA-stage Metrics
 - action MAE / MSE
 - gripper accuracy
 - sequence consistency
 - CALVIN average sequence length / task success
 
-## Action representation
+## Action Representation
 
 The working low-level action format is:
 
@@ -162,7 +162,7 @@ Example task:
 
 The model should map observation + instruction into a sequence of end-effector deltas and gripper commands.
 
-## Suggested compute plan
+## Suggested Compute Plan
 
 Primary GPU target:
 - **Vast.ai A40 (48 GB)** for VLM and VLA stages
@@ -173,7 +173,7 @@ Budget framing used in the project plan:
 - at **$200 / month**, the theoretical upper bound is about **689.7 GPU-hours**
 - practical planning should reserve part of the budget for storage, interrupted runs, retries, and checkpoint retention
 
-## Suggested repository structure
+## Suggested Repository Structure
 
 ```text
 .
@@ -207,7 +207,7 @@ Budget framing used in the project plan:
     └── sevp_records/
 ```
 
-## Evidence retention
+## Evidence Retention
 
 Keep these artifacts continuously:
 
