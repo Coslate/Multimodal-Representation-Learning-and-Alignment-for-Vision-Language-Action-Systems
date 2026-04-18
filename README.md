@@ -2,21 +2,26 @@
 
 This repository tracks an end-to-end research project that studies how **alignment choices for a 7B language backbone** affect downstream transfer to **grounded VLMs** and **vision-language-action (VLA) policies**.
 
+The core research comparison remains **CALVIN-centered** for grounded multimodal reasoning and long-horizon VLA evaluation. In parallel, the project now includes a complementary **Isaac Lab / Isaac Sim validation platform** for continuous-control Franka arm manipulation. The Isaac branch uses the same **7D action contract** as the main VLA roadmap and serves as an engineering validation path for image-plus-proprio observations, episode-safe rollout datasets, evaluation metrics, and rollout GIF artifacts.
+
 ![System Architecture](./assets/system_architecture.jpeg)
 
 ## Project Objective
 
 The core research question is:
 
-> Which alignment method produces a 7B language backbone that transfers best to grounded vision-language modeling and language-conditioned action prediction?
+> Which alignment method produces a 7B language backbone that transfers best to grounded vision-language modeling and language-conditioned action prediction across both the core CALVIN benchmark path and a complementary Isaac Lab validation path?
 
-The project is organized as a staged pipeline:
+The project is organized as a staged roadmap:
 
-1. Build a planning-friendly aligned 7B language backbone.
-2. Compare SFT, DPO, PPO, GRPO, and FIPO as alignment methods.
-3. Attach a vision encoder and train a grounded VLM.
-4. Extend the VLM into an action-aware model.
-5. Fine-tune a VLA policy and compare transfer across alignment backbones.
+1. Create baseline documentation, architecture, and evidence-retention artifacts.
+2. Build a planning-friendly aligned 7B language backbone.
+3. Compare SFT, DPO, PPO, GRPO, and FIPO as alignment methods.
+4. Attach a vision encoder and train a grounded VLM.
+5. Extend the VLM into an action-aware model.
+6. Fine-tune a CALVIN-centered VLA policy and compare transfer across alignment backbones.
+7. Add an Isaac Lab validation platform for shared 7D continuous-control manipulation.
+8. Package results, error taxonomy, and retained artifacts into a reusable research-memory bundle.
 
 ## System Overview
 
@@ -37,7 +42,11 @@ All model variants use the same canonical JSON schemas:
 - `reasoning_answer`
 - `action_plan`
 
-### C. Training Stages
+### C. Training and validation stages
+
+#### Step 0 — Documentation, framing, and baseline artifacts
+- Freeze the project statement, system architecture, README, experiment plan, and evidence conventions.
+- Keep stable naming and structure so later results can be reloaded consistently.
 
 #### Step 1 — Backbone selection + SFT baseline
 - Probe 2–3 candidate 7B models with a fixed constrained-format prompt set.
@@ -61,10 +70,20 @@ All model variants use the same canonical JSON schemas:
 - Map language + observation pairs to next-action supervision.
 - Add short temporal context and evaluate consistency.
 
-#### Step 5 — VLA policy
+#### Step 5 — CALVIN-centered VLA policy
 - Fine-tune the best action-aware model into a VLA policy.
 - Evaluate offline trajectories and CALVIN task-level success.
 - Run cross-stage transfer ablations across alignment backbones.
+
+#### Step 6 — Isaac Lab validation platform
+- Validate the shared 7D action contract on `Isaac-Lift-Cube-Franka-IK-Rel-v0`.
+- Use an explicit `{image, proprio}` observation contract with image-plus-proprio continuous control.
+- Build rollout, dataset, evaluation, and GIF infrastructure that can support scripted policies, RL baselines, and later diffusion-policy variants.
+- Use the Isaac branch as a complementary engineering validation path that makes action interfaces, runtime failures, and rollout artifacts easier to inspect before and alongside broader VLA experimentation.
+
+#### Step 7 — Research memory artifact packaging
+- Build unified result tables and error taxonomies.
+- Keep stable PDFs, README summaries, figures, logs, and retained evidence for later reload.
 
 ## Data Construction Details
 
@@ -97,6 +116,10 @@ Example target:
 - short action plan
 - goal state
 
+### 5. Isaac Lab rollout and demonstration data contract
+**Source:** Isaac Lab / Isaac Sim validation branch  
+**Method:** Store rollouts by episode with keys for images, proprios, actions, rewards, dones, truncateds, and metadata. The observation contract remains `{image, proprio}` and the action contract remains 7D so the validation platform speaks the same action language as the broader VLA plan.
+
 ## Model Outputs
 
 ### Text Backbone
@@ -114,12 +137,20 @@ The grounded VLM should support:
 - grounded instruction following
 - task-relevant state summarization
 
-### Action-aware VLM / VLA
-The action-aware model and VLA policy should support:
+### Action-aware VLM / CALVIN-centered VLA
+The action-aware model and CALVIN-centered VLA policy should support:
 - next-action prediction
 - short-horizon action consistency
 - language-conditioned manipulation
 - task-level success on held-out sequences
+
+### Isaac Lab validation platform
+The Isaac validation branch should support:
+- image-plus-proprio continuous-control rollouts
+- a formal 7D action interface for Franka manipulation
+- episode-safe dataset generation
+- evaluation JSONs and rollout GIF artifacts
+- later RL and imitation-learning baselines built on the same observation/action contract
 
 ## Evaluation
 
@@ -137,15 +168,25 @@ The action-aware model and VLA policy should support:
 - RefCOCO(g) grounding accuracy at IoU >= 0.5
 - hallucination rate
 
-### VLA-stage Metrics
+### CALVIN-centered VLA Metrics
 - action MAE / MSE
 - gripper accuracy
 - sequence consistency
-- CALVIN average sequence length / task success
+- CALVIN average successful subtasks
+- Success@k
+
+### Isaac Lab Validation Metrics
+- mean return
+- success rate
+- mean episode length
+- optional steps-to-threshold
+- mean action jerk
+- dataset integrity checks
+- rollout GIF integrity / readability
 
 ## Action Representation
 
-The working low-level action format is:
+The shared low-level action format is:
 
 ```text
 [Δx, Δy, Δz, Δroll, Δpitch, Δyaw, gripper]
@@ -160,13 +201,17 @@ A simplified 5D version can be used early in development:
 Example task:
 > Pick up the red block and place it inside the open drawer.
 
-The model should map observation + instruction into a sequence of end-effector deltas and gripper commands.
+The model should map observation + instruction into a sequence of end-effector deltas and gripper commands. The Isaac Lab validation branch uses the full 7D contract on `Isaac-Lift-Cube-Franka-IK-Rel-v0` so that the main VLA roadmap and the validation platform remain aligned at the interface level.
 
 ## Suggested Compute Plan
 
 Primary GPU target:
-- **Vast.ai A40 (48 GB)** for VLM and VLA stages
-- smaller text-only debugging can optionally run on cheaper 24 GB cards, but the main plan assumes A40
+- **Vast.ai A40 (48 GB)** for the main multimodal alignment, grounded VLM, action-aware VLM, and CALVIN-centered VLA phases.
+- Smaller text-only debugging can optionally run on cheaper 24 GB cards, but the main plan assumes A40.
+
+Additional Isaac Lab runtime note:
+- The Isaac validation branch can follow the same overall GPU budget framing for training baselines, but runtime testing must also account for Isaac Sim container requirements, camera support, and headless rendering constraints.
+- When camera mode is needed, the project plan assumes the official `nvcr.io/nvidia/isaac-sim:5.1.0` container.
 
 Budget framing used in the project plan:
 - public A40 reference price used in the plan: about **$0.29 / GPU-hour**
@@ -178,7 +223,10 @@ Budget framing used in the project plan:
 ```text
 .
 ├── README.md
-├── system_architecture.svg
+├── assets/
+│   └── system_architecture.jpeg
+├── plans/
+│   └── plan_isaac_arm_manipulation.md
 ├── docs/
 │   ├── project_statement.md
 │   ├── metrics.md
@@ -195,7 +243,8 @@ Budget framing used in the project plan:
 │   ├── text_alignment/
 │   ├── vlm/
 │   ├── action_model/
-│   └── vla/
+│   ├── vla/
+│   └── isaac_validation/
 ├── outputs/
 │   ├── checkpoints/
 │   ├── reports/
@@ -217,5 +266,6 @@ Keep these artifacts continuously:
 - experiment plans
 - git history and tagged checkpoints
 - training and evaluation reports
+- rollout datasets / evaluation JSONs / GIF artifacts where applicable
 - demos / slides / screenshots
 - expense receipts for compute or tooling
