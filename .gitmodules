@@ -1,0 +1,3 @@
+[submodule "modules/isaac_lab_arm_manipulation"]
+	path = modules/isaac_lab_arm_manipulation
+	url = https://github.com/Coslate/Isaac-Lab-Arm-Manipulation-Continuous-Control-RL-and-Diffusion-Policy.git
